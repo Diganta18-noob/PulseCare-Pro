@@ -273,7 +273,7 @@ export default function LoginPage() {
                                     className="absolute inset-0 rounded-xl bg-linear-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur"
                                 />
                                 <div className="relative">
-                                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-all duration-300 ${focused === 'email' ? 'text-blue-400 scale-110' : 'text-white/25'}`} />
+                                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 z-20 transition-all duration-300 ${focused === 'email' ? 'text-blue-400 scale-110' : 'text-white/25'}`} />
                                     <input 
                                         type="email" 
                                         value={email} 
@@ -282,7 +282,7 @@ export default function LoginPage() {
                                         onBlur={() => setFocused(null)}
                                         placeholder="Enter your email" 
                                         required 
-                                        className="input-premium w-full pl-12 pr-4 py-3.5 rounded-xl text-[15px]"
+                                        className="input-premium w-full pl-16 pr-4 py-3.5 rounded-xl text-[15px]"
                                     />
                                 </div>
                             </div>
@@ -304,7 +304,7 @@ export default function LoginPage() {
                                     className="absolute inset-0 rounded-xl bg-linear-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur"
                                 />
                                 <div className="relative">
-                                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-all duration-300 ${focused === 'password' ? 'text-blue-400 scale-110' : 'text-white/25'}`} />
+                                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 z-20 transition-all duration-300 ${focused === 'password' ? 'text-blue-400 scale-110' : 'text-white/25'}`} />
                                     <input 
                                         type="password" 
                                         value={password} 
@@ -313,7 +313,7 @@ export default function LoginPage() {
                                         onBlur={() => setFocused(null)}
                                         placeholder="Enter your password" 
                                         required 
-                                        className="input-premium w-full pl-12 pr-4 py-3.5 rounded-xl text-[15px]"
+                                        className="input-premium w-full pl-16 pr-4 py-3.5 rounded-xl text-[15px]"
                                     />
                                 </div>
                             </div>
