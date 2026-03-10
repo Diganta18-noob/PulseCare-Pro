@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=1000&color=00B4D8&center=true&vCenter=true&width=700&lines=🏥+Intelligent+Patient+Management;💉+Prescription+%26+Treatment+Tracking;📊+Real-Time+Health+Analytics;🔬+Lab+Results+%26+Diagnostics;👨‍⚕️+Doctor+%26+Staff+Portal;🛡️+HIPAA-Ready+Secure+Architecture" alt="Typing SVG" /></a>
+  <a href="#"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=1000&color=00B4D8&center=true&vCenter=true&width=700&lines=Intelligent+Patient+Management;Prescription+%26+Treatment+Tracking;Real-Time+Health+Analytics;Lab+Results+%26+Diagnostics;Doctor+%26+Staff+Portal;HIPAA-Ready+Secure+Architecture" alt="Typing SVG" /></a>
 </p>
 
 <p align="center">
@@ -38,18 +38,21 @@
 <td width="33%" align="center">
 
 ### ⚡ Blazing Fast
+
 React 19 + Vite 7 for<br/>sub-second load times
 
 </td>
 <td width="33%" align="center">
 
 ### 🔒 Secure by Design
+
 JWT auth, bcrypt hashing,<br/>cookie-based sessions
 
 </td>
 <td width="33%" align="center">
 
 ### 📊 Data-Driven
+
 Recharts analytics with<br/>Tanstack Query caching
 
 </td>
@@ -145,31 +148,31 @@ PulseCare-Pro/
 <tr>
 <td>
 
-| Technology | Version |
-|:----------:|:-------:|
-| ⚛️ React | 19.2 |
-| ⚡ Vite | 7.3 |
-| 🎨 Tailwind CSS | 4.1 |
-| 🧸 Zustand | 5.0 |
-| 📊 Recharts | 3.7 |
-| 🔄 Tanstack Query | 5.90 |
-| 📋 Tanstack Table | 8.21 |
-| 🎭 Framer Motion | 12.34 |
-| 🔔 Sonner | 2.0 |
-| 💎 Lucide React | Icons |
+|    Technology     | Version |
+| :---------------: | :-----: |
+|     ⚛️ React      |  19.2   |
+|      ⚡ Vite      |   7.3   |
+|  🎨 Tailwind CSS  |   4.1   |
+|    🧸 Zustand     |   5.0   |
+|    📊 Recharts    |   3.7   |
+| 🔄 Tanstack Query |  5.90   |
+| 📋 Tanstack Table |  8.21   |
+| 🎭 Framer Motion  |  12.34  |
+|     🔔 Sonner     |   2.0   |
+|  💎 Lucide React  |  Icons  |
 
 </td>
 <td>
 
-| Technology | Version |
-|:----------:|:-------:|
-| 🚀 Express | 5.2 |
-| 🔷 Prisma ORM | 5.22 |
-| 🔐 JWT | 9.0 |
-| 🔑 bcryptjs | 3.0 |
-| 🍪 Cookie Parser | 1.4 |
-| 🌐 CORS | 2.8 |
-| 📦 dotenv | 17.3 |
+|    Technology    | Version |
+| :--------------: | :-----: |
+|    🚀 Express    |   5.2   |
+|  🔷 Prisma ORM   |  5.22   |
+|      🔐 JWT      |   9.0   |
+|   🔑 bcryptjs    |   3.0   |
+| 🍪 Cookie Parser |   1.4   |
+|     🌐 CORS      |   2.8   |
+|    📦 dotenv     |  17.3   |
 
 </td>
 </tr>
