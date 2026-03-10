@@ -114,8 +114,8 @@ export default function RegisterPage() {
                         <div className="space-y-1.5">
                              <label className="text-[11px] font-bold text-white/40 uppercase tracking-wider ml-1">Email</label>
                              <div className="relative">
-                                <Mail className="absolute left-3.5 top-2.5 w-4 h-4 text-white/20" />
-                                <input type="email" required className="input-premium w-full pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="john@example.com"
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                                <input type="email" required className="input-premium w-full pl-11 pr-4 py-2.5 rounded-xl text-sm" placeholder="john@example.com"
                                     value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                              </div>
                         </div>
@@ -123,8 +123,8 @@ export default function RegisterPage() {
                         <div className="space-y-1.5">
                              <label className="text-[11px] font-bold text-white/40 uppercase tracking-wider ml-1">Phone</label>
                              <div className="relative">
-                                <Phone className="absolute left-3.5 top-2.5 w-4 h-4 text-white/20" />
-                                <input required className="input-premium w-full pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="+1 (555) 000-0000"
+                                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                                <input required className="input-premium w-full pl-11 pr-4 py-2.5 rounded-xl text-sm" placeholder="+1 (555) 000-0000"
                                     value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                              </div>
                         </div>
@@ -132,8 +132,8 @@ export default function RegisterPage() {
                         <div className="space-y-1.5">
                              <label className="text-[11px] font-bold text-white/40 uppercase tracking-wider ml-1">Password</label>
                              <div className="relative">
-                                <Lock className="absolute left-3.5 top-2.5 w-4 h-4 text-white/20" />
-                                <input type="password" required className="input-premium w-full pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="••••••••"
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                                <input type="password" required className="input-premium w-full pl-11 pr-4 py-2.5 rounded-xl text-sm" placeholder="••••••••"
                                     value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
                              </div>
                         </div>
@@ -171,16 +171,16 @@ export default function RegisterPage() {
                                     <div className="space-y-1.5">
                                          <label className="text-[11px] font-bold text-white/40 uppercase tracking-wider ml-1">Specialization</label>
                                          <div className="relative">
-                                            <Stethoscope className="absolute left-3.5 top-2.5 w-4 h-4 text-white/20" />
-                                            <input required={formData.role === 'DOCTOR'} className="input-premium w-full pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="e.g. Cardiology"
+                                            <Stethoscope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                                            <input required={formData.role === 'DOCTOR'} className="input-premium w-full pl-11 pr-4 py-2.5 rounded-xl text-sm" placeholder="e.g. Cardiology"
                                                 value={formData.specialization} onChange={e => setFormData({ ...formData, specialization: e.target.value })} />
                                          </div>
                                     </div>
                                     <div className="space-y-1.5">
                                          <label className="text-[11px] font-bold text-white/40 uppercase tracking-wider ml-1">License No</label>
                                          <div className="relative">
-                                            <Briefcase className="absolute left-3.5 top-2.5 w-4 h-4 text-white/20" />
-                                            <input required={formData.role === 'DOCTOR'} className="input-premium w-full pl-10 pr-4 py-2.5 rounded-xl text-sm" placeholder="LIC-123456"
+                                            <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                                            <input required={formData.role === 'DOCTOR'} className="input-premium w-full pl-11 pr-4 py-2.5 rounded-xl text-sm" placeholder="LIC-123456"
                                                 value={formData.licenseNo} onChange={e => setFormData({ ...formData, licenseNo: e.target.value })} />
                                          </div>
                                     </div>
