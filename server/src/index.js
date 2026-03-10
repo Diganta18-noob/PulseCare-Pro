@@ -1,17 +1,19 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import mongoose from 'mongoose';
 
-const authRoutes = require('./routes/auth');
-const patientRoutes = require('./routes/patients');
-const doctorRoutes = require('./routes/doctors');
-const appointmentRoutes = require('./routes/appointments');
-const dashboardRoutes = require('./routes/dashboard');
+import authRoutes        from './routes/auth.js';
+import dashboardRoutes   from './routes/dashboard.js';
+import patientsRoutes    from './routes/patients.js';
+import appointmentsRoutes from './routes/appointments.js';
+import doctorsRoutes     from './routes/doctors.js';
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Middleware
+/* ── Middleware ── */
 app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
@@ -19,31 +21,32 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/doctors', doctorRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+/* ── Routes ── */
+app.use('/api/auth',         authRoutes);
+app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/patients',     patientsRoutes);
+app.use('/api/appointments', appointmentsRoutes);
+app.use('/api/doctors',      doctorsRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Global error handler
+/* ── Global Error Handler ── */
 app.use((err, req, res, next) => {
-    console.error('Error:', err.message);
-    const statusCode = err.statusCode || 500;
-    res.status(statusCode).json({
-        message: err.message || 'Internal Server Error',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    console.error('[Server Error]', err.message);
+    res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
+});
+
+/* ── MongoDB Connect & Start ── */
+const MONGO_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
+if (!MONGO_URI || MONGO_URI.startsWith('postgresql')) {
+    console.error('❌ MONGODB_URI is not set or is still the PostgreSQL placeholder. Please update server/.env');
+    process.exit(1);
+}
+
+mongoose.connect(MONGO_URI)
+    .then(() => {
+        console.log('✅ MongoDB connected');
+        app.listen(PORT, () => console.log(`🏥 PulseCare Pro server running on port ${PORT}`));
+    })
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err.message);
+        process.exit(1);
     });
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🏥 PulseCare Pro server running on port ${PORT}`);
-});
-
-module.exports = app;

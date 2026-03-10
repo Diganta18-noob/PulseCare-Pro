@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-table';
 import { usePatients } from '../hooks/usePatients';
 import { useDeletePatient } from '../hooks/useDeletePatient';
+import { useAuthStore } from '../stores/authStore';
 import {
     Search, Trash2, ChevronLeft, ChevronRight, UserPlus,
     MoreHorizontal, ArrowUpDown, Droplet, Calendar, Shield, Users
@@ -48,8 +49,10 @@ const Tip = ({ active, payload }) => {
 export default function PatientsPage() {
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
-    const { data: patients = [], isLoading } = usePatients(sorting); // Pass sorting state to hook
+    const { data: patients = [], isLoading } = usePatients(sorting);
     const { mutate: deletePatient } = useDeletePatient();
+    const { user } = useAuthStore();
+    const canEdit = user?.role === 'ADMIN' || user?.role === 'DOCTOR';
 
     /* ── Stats ── */
     const stats = useMemo(() => {
@@ -109,7 +112,7 @@ export default function PatientsPage() {
         },
         {
             id: 'actions',
-            cell: info => (
+            cell: info => canEdit ? (
                 <button
                     onClick={() => {
                         if (confirm('Delete this patient?')) {
@@ -122,9 +125,9 @@ export default function PatientsPage() {
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
-            ),
+            ) : null,
         },
-    ], [deletePatient]);
+    ], [deletePatient, canEdit]);
 
     const table = useReactTable({
         data: patients, columns, state: { sorting, globalFilter },
@@ -161,19 +164,19 @@ export default function PatientsPage() {
                 <motion.div className="glass-card p-4 flex items-center justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                     <div>
                         <h3 className="text-white/40 text-xs font-medium uppercase tracking-wider mb-2">Blood Groups</h3>
-                        <div className="flex gap-2">
-                             {stats.blood.slice(0, 3).map((b, i) => (
+                        <div className="flex flex-wrap gap-2">
+                             {stats.blood.slice(0, 4).map((b, i) => (
                                  <div key={i} className="text-[10px] text-white/50 flex items-center gap-1">
-                                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: ['#f43f5e', '#3b82f6', '#8b5cf6'][i] }} />
-                                     {b.name}
+                                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: ['#f43f5e', '#3b82f6', '#8b5cf6', '#10b981'][i] }} />
+                                     {b.name}: {b.value}
                                  </div>
                              ))}
                         </div>
                     </div>
-                    <div className="h-16 w-16">
+                    <div className="h-20 w-20">
                         <ResponsiveContainer>
                             <PieChart>
-                                <Pie data={stats.blood} dataKey="value" innerRadius={20} outerRadius={30} paddingAngle={2} stroke="none">
+                                <Pie data={stats.blood} dataKey="value" innerRadius={22} outerRadius={36} paddingAngle={2} stroke="none">
                                     {stats.blood.map((_, i) => <Cell key={i} fill={['#f43f5e', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'][i % 5]} />)}
                                 </Pie>
                                 <Tooltip content={<Tip />} />
@@ -183,13 +186,14 @@ export default function PatientsPage() {
                 </motion.div>
 
                 <motion.div className="glass-card p-4 flex items-center justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <div>
+                    <div className="flex-1">
                         <h3 className="text-white/40 text-xs font-medium uppercase tracking-wider mb-1">Age Demographics</h3>
-                        <p className="text-[10px] text-white/30">Majority in 30-49 range</p>
+                        <p className="text-[10px] text-white/30">Patient distribution by age group</p>
                     </div>
-                    <div className="h-16 w-24">
+                    <div className="h-20 w-32">
                         <ResponsiveContainer>
                             <BarChart data={stats.age}>
+                                <XAxis dataKey="name" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.3)' }} axisLine={false} tickLine={false} />
                                 <Bar dataKey="value" fill="#3b82f6" radius={[2, 2, 0, 0]} />
                                 <Tooltip content={<Tip />} />
                             </BarChart>

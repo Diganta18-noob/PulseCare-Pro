@@ -1,30 +1,25 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
-const authenticate = (req, res, next) => {
+export const authenticate = async (req, res, next) => {
     try {
         const token = req.cookies?.token;
-        if (!token) {
-            return res.status(401).json({ message: 'Authentication required' });
-        }
+        if (!token) return res.status(401).json({ message: 'Not authenticated' });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        const user = await User.findById(decoded.id).select('-password');
+        if (!user) return res.status(401).json({ message: 'User not found' });
+
+        req.user = user;
         next();
-    } catch (error) {
-        return res.status(401).json({ message: 'Invalid or expired token' });
+    } catch {
+        res.status(401).json({ message: 'Invalid or expired token' });
     }
 };
 
-const authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Authentication required' });
-        }
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
-        }
-        next();
-    };
+export const authorize = (...roles) => (req, res, next) => {
+    if (!roles.includes(req.user?.role)) {
+        return res.status(403).json({ message: 'Access denied' });
+    }
+    next();
 };
-
-module.exports = { authenticate, authorize };

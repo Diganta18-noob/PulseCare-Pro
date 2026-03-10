@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useDashboardStats } from '../hooks/useDashboard';
+import { useAuthStore } from '../stores/authStore';
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import {
     Users, Stethoscope, Calendar, CalendarCheck, TrendingUp,
@@ -66,8 +67,8 @@ export default function DashboardPage() {
     const cards = [
         { label: 'Total Patients', value: stats?.totalPatients ?? 0, icon: Users, grad: 'from-blue-600/20 to-blue-500/5', iconBg: 'from-blue-600 to-blue-400', border: 'border-blue-500/15', glow: 'glow-blue', tag: '+12%', up: true },
         { label: 'Active Doctors', value: stats?.totalDoctors ?? 0, icon: Stethoscope, grad: 'from-emerald-600/20 to-emerald-500/5', iconBg: 'from-emerald-600 to-emerald-400', border: 'border-emerald-500/15', glow: 'glow-emerald', tag: '+3', up: true },
-        { label: 'Appointments', value: stats?.totalAppointments ?? 0, icon: Calendar, grad: 'from-purple-600/20 to-purple-500/5', iconBg: 'from-purple-600 to-purple-400', border: 'border-purple-500/15', glow: 'glow-purple', tag: '+28%', up: true },
-        { label: "Today's", value: stats?.appointmentsToday ?? 0, icon: CalendarCheck, grad: 'from-amber-600/20 to-amber-500/5', iconBg: 'from-amber-600 to-amber-400', border: 'border-amber-500/15', glow: 'glow-amber', tag: 'Live', up: null },
+        { label: 'Total Appts', value: stats?.totalAppointments ?? 0, icon: Calendar, grad: 'from-purple-600/20 to-purple-500/5', iconBg: 'from-purple-600 to-purple-400', border: 'border-purple-500/15', glow: 'glow-purple', tag: '+28%', up: true },
+        { label: "Today's Appts", value: stats?.appointmentsToday ?? 0, icon: CalendarCheck, grad: 'from-amber-600/20 to-amber-500/5', iconBg: 'from-amber-600 to-amber-400', border: 'border-amber-500/15', glow: 'glow-amber', tag: 'Live', up: null },
     ];
 
     return (
@@ -80,7 +81,7 @@ export default function DashboardPage() {
                         <span className="animate-ping absolute h-full w-full rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative rounded-full h-2 w-2 bg-emerald-400" />
                     </span>
-                    Real-time hospital analytics
+                    Real-time hospital analytics · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
             </motion.div>
 
@@ -145,21 +146,21 @@ export default function DashboardPage() {
 
                 {/* Departments */}
                 <motion.div className="lg:col-span-2 glass-card p-4 md:p-5 min-w-0" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                    <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Heart className="w-4 h-4 text-red-400" /> Departments</h3>
-                    <ResponsiveContainer width="100%" height={140}>
+                    <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Heart className="w-4 h-4 text-red-400" /> Departments</h3>
+                    <ResponsiveContainer width="100%" height={150}>
                         <PieChart>
-                            <Pie data={depts} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={3} dataKey="value" stroke="none">
+                            <Pie data={depts} cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={3} dataKey="value" stroke="none">
                                 {depts.map((e, i) => <Cell key={i} fill={e.color} />)}
                             </Pie>
                             <Tooltip content={<Tip />} />
                         </PieChart>
                     </ResponsiveContainer>
-                    <div className="space-y-1 mt-1">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
                         {depts.map((d, i) => (
                             <motion.div key={d.name} className="flex items-center justify-between text-xs"
                                 initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.05 }}>
-                                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} /><span className="text-white/35">{d.name}</span></span>
-                                <span className="text-white/55 font-bold">{d.value}%</span>
+                                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} /><span className="text-white/35 truncate">{d.name}</span></span>
+                                <span className="text-white/55 font-bold ml-1">{d.value}%</span>
                             </motion.div>
                         ))}
                     </div>

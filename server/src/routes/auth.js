@@ -1,138 +1,75 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const prisma = require('../lib/prisma');
-const { authenticate } = require('../middleware/auth');
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import Doctor from '../models/Doctor.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// POST /api/auth/register
-router.post('/register', async (req, res, next) => {
-    try {
-        const { email, password, role, firstName, lastName, phone, specialization, licenseNo, dateOfBirth, bloodGroup } = req.body;
+const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-        const existingUser = await prisma.user.findUnique({ where: { email } });
-        if (existingUser) {
-            return res.status(409).json({ message: 'Email already in use' });
-        }
-
-        const passwordHash = await bcrypt.hash(password, 12);
-        const userRole = ['ADMIN', 'DOCTOR', 'PATIENT'].includes(role) ? role : 'PATIENT';
-
-        const user = await prisma.user.create({
-            data: {
-                email,
-                passwordHash,
-                role: userRole,
-                profile: {
-                    create: {
-                        firstName: firstName || '',
-                        lastName: lastName || '',
-                        phone: phone || null,
-                    },
-                },
-                ...(userRole === 'DOCTOR' && {
-                    doctor: {
-                        create: {
-                            specialization: specialization || 'General',
-                            licenseNo: licenseNo || `LIC-${Date.now()}`,
-                        },
-                    },
-                }),
-                ...(userRole === 'PATIENT' && {
-                    patient: {
-                        create: {
-                            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-                            bloodGroup: bloodGroup || null,
-                        },
-                    },
-                }),
-            },
-            include: { profile: true, doctor: true, patient: true },
-        });
-
-        const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-
-        const { passwordHash: _, ...userWithoutPassword } = user;
-        res.status(201).json({ user: userWithoutPassword });
-    } catch (error) {
-        next(error);
-    }
+const setCookie = (res, token) => res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
 });
 
-// POST /api/auth/login
+/* ── Register ── */
+router.post('/register', async (req, res, next) => {
+    try {
+        const { email, password, firstName, lastName, phone, role, specialization } = req.body;
+        if (!email || !password || !firstName || !lastName) {
+            return res.status(400).json({ message: 'Required fields missing' });
+        }
+
+        const existing = await User.findOne({ email });
+        if (existing) return res.status(409).json({ message: 'Email already in use' });
+
+        const user = await User.create({
+            email,
+            password,
+            role: role?.toUpperCase() || 'PATIENT',
+            profile: { firstName, lastName, phone },
+        });
+
+        // If doctor role, create doctor profile
+        if (user.role === 'DOCTOR') {
+            await Doctor.create({
+                user: user._id,
+                specialization: specialization || 'General',
+            });
+        }
+
+        const token = signToken(user._id);
+        setCookie(res, token);
+        res.status(201).json({ message: 'Account created', user });
+    } catch (err) { next(err); }
+});
+
+/* ── Login ── */
 router.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
-
-        const user = await prisma.user.findUnique({
-            where: { email },
-            include: { profile: true, doctor: true, patient: true },
-        });
-
-        if (!user) {
+        const user = await User.findOne({ email });
+        if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        const validPassword = await bcrypt.compare(password, user.passwordHash);
-        if (!validPassword) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-
-        const { passwordHash: _, ...userWithoutPassword } = user;
-        res.json({ user: userWithoutPassword });
-    } catch (error) {
-        next(error);
-    }
+        const token = signToken(user._id);
+        setCookie(res, token);
+        res.json({ message: 'Login successful', user });
+    } catch (err) { next(err); }
 });
 
-// POST /api/auth/logout
+/* ── Logout ── */
 router.post('/logout', (req, res) => {
-    res.clearCookie('token');
-    res.json({ message: 'Logged out successfully' });
+    res.clearCookie('token').json({ message: 'Logged out' });
 });
 
-// GET /api/auth/me
-router.get('/me', authenticate, async (req, res, next) => {
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: req.user.userId },
-            include: { profile: true, doctor: true, patient: true },
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        const { passwordHash: _, ...userWithoutPassword } = user;
-        res.json({ user: userWithoutPassword });
-    } catch (error) {
-        next(error);
-    }
+/* ── Me ── */
+router.get('/me', authenticate, (req, res) => {
+    res.json({ user: req.user });
 });
 
-module.exports = router;
+export default router;

@@ -4,6 +4,7 @@ import { useAppointments } from '../hooks/useAppointments';
 import { useDoctors } from '../hooks/useDashboard';
 import { usePatients } from '../hooks/usePatients';
 import { useBookAppointment } from '../hooks/useBookAppointment';
+import { useAuthStore } from '../stores/authStore';
 import { format } from 'date-fns';
 import {
     Calendar, Clock, User, Stethoscope, ChevronDown, ChevronLeft, ChevronRight,
@@ -32,6 +33,8 @@ export default function AppointmentsPage() {
     const [isBookingOpen, setIsBookingOpen] = useState(false);
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
+    const { user } = useAuthStore();
+    const canBook = user?.role === 'ADMIN' || user?.role === 'DOCTOR';
 
     const { data: appointments = [], isLoading } = useAppointments(sorting);
     const { data: doctors = [] } = useDoctors();
@@ -132,6 +135,7 @@ export default function AppointmentsPage() {
                     <h2 className="text-2xl font-bold text-white tracking-tight">Appointments</h2>
                     <p className="text-white/30 text-xs mt-1">Schedule & manage bookings</p>
                 </div>
+                {canBook && (
                 <button
                     onClick={() => setIsBookingOpen(!isBookingOpen)}
                     className="btn-premium px-4 py-2 rounded-lg text-xs flex items-center gap-2"
@@ -139,6 +143,7 @@ export default function AppointmentsPage() {
                     {isBookingOpen ? <XCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                     {isBookingOpen ? 'Cancel Booking' : 'New Appointment'}
                 </button>
+                )}
             </motion.div>
 
             {/* Stats */}
@@ -151,7 +156,9 @@ export default function AppointmentsPage() {
                     <h3 className="text-white/40 text-[10px] items-center gap-1 flex uppercase tracking-wider mb-2"><Clock className="w-3 h-3 text-blue-400" /> Scheduled</h3>
                     <div className="text-3xl font-bold text-blue-400">{stats.scheduled}</div>
                 </motion.div>
-                <motion.div className="glass-card p-4 md:col-span-2 flex items-center justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <motion.div className="glass-card p-4 md:col-span-2 flex flex-col justify-center" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                    <h3 className="text-white/40 text-[10px] items-center gap-1 flex uppercase tracking-wider mb-2"><Stethoscope className="w-3 h-3 text-blue-400" /> Doctor Load</h3>
+                     {stats.loadData.length > 0 ? (
                      <div className="h-16 w-full">
                         <ResponsiveContainer>
                             <BarChart data={stats.loadData} layout="vertical" barSize={8}>
@@ -162,12 +169,15 @@ export default function AppointmentsPage() {
                             </BarChart>
                         </ResponsiveContainer>
                      </div>
+                     ) : (
+                         <div className="text-white/20 text-xs text-center py-2">No appointment data</div>
+                     )}
                 </motion.div>
             </div>
 
-            {/* Booking Form */}
+            {/* Booking Form - only for ADMIN/DOCTOR */}
             <AnimatePresence>
-                {isBookingOpen && (
+                {isBookingOpen && canBook && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}

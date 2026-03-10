@@ -1,10 +1,11 @@
-const express = require('express');
-const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../lib/prisma');
+import express from 'express';
+import User from '../models/User.js';
+import Patient from '../models/Patient.js';
+import Appointment from '../models/Appointment.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /api/dashboard/stats
 router.get('/stats', authenticate, authorize('ADMIN', 'DOCTOR'), async (req, res, next) => {
     try {
         const today = new Date();
@@ -13,27 +14,14 @@ router.get('/stats', authenticate, authorize('ADMIN', 'DOCTOR'), async (req, res
         tomorrow.setDate(tomorrow.getDate() + 1);
 
         const [totalPatients, totalDoctors, totalAppointments, appointmentsToday] = await Promise.all([
-            prisma.patient.count(),
-            prisma.doctor.count(),
-            prisma.appointment.count(),
-            prisma.appointment.count({
-                where: {
-                    appointmentTime: { gte: today, lt: tomorrow },
-                },
-            }),
+            Patient.countDocuments(),
+            User.countDocuments({ role: 'DOCTOR' }),
+            Appointment.countDocuments(),
+            Appointment.countDocuments({ date: { $gte: today, $lt: tomorrow } }),
         ]);
 
-        res.json({
-            stats: {
-                totalPatients,
-                totalDoctors,
-                totalAppointments,
-                appointmentsToday,
-            },
-        });
-    } catch (error) {
-        next(error);
-    }
+        res.json({ stats: { totalPatients, totalDoctors, totalAppointments, appointmentsToday } });
+    } catch (err) { next(err); }
 });
 
-module.exports = router;
+export default router;

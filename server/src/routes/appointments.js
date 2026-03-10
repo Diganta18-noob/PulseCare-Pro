@@ -1,56 +1,75 @@
-const express = require('express');
-const { authenticate, authorize } = require('../middleware/auth');
-const appointmentService = require('../services/appointmentService');
+import express from 'express';
+import Appointment from '../models/Appointment.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /api/appointments
+/* ── Get All Appointments ── */
 router.get('/', authenticate, async (req, res, next) => {
     try {
-        const { sortBy, order } = req.query;
-        const appointments = await appointmentService.getAllAppointments(sortBy, order);
-        res.json({ appointments });
-    } catch (error) {
-        next(error);
-    }
+        const { sortBy = 'date', sortOrder = 'desc' } = req.query;
+        const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+        let filter = {};
+        // Doctors only see their own appointments
+        if (req.user.role === 'DOCTOR') filter.doctor = req.user._id;
+        // Patients see their linked appointments only (if patient record has user ref)
+        // For simplicity, patients see all SCHEDULED appointments
+        
+        const appointments = await Appointment.find(filter)
+            .sort(sort)
+            .populate('patient', 'firstName lastName bloodGroup')
+            .populate('doctor', 'profile')
+            .lean();
+
+        res.json(appointments);
+    } catch (err) { next(err); }
 });
 
-// GET /api/appointments/:id
-router.get('/:id', authenticate, async (req, res, next) => {
+/* ── Book Appointment ── */
+router.post('/', authenticate, authorize('ADMIN', 'DOCTOR'), async (req, res, next) => {
     try {
-        const appointment = await appointmentService.getAppointmentById(req.params.id);
-        if (!appointment) {
-            return res.status(404).json({ message: 'Appointment not found' });
+        const { patientId, doctorId, date, time, reason, notes } = req.body;
+        if (!patientId || !doctorId || !date || !time) {
+            return res.status(400).json({ message: 'patientId, doctorId, date and time are required' });
         }
-        res.json({ appointment });
-    } catch (error) {
-        next(error);
-    }
+        const appointment = await Appointment.create({
+            patient: patientId,
+            doctor: doctorId,
+            date: new Date(date),
+            time,
+            reason,
+            notes,
+            status: 'SCHEDULED',
+        });
+        const populated = await appointment.populate([
+            { path: 'patient', select: 'firstName lastName' },
+            { path: 'doctor', select: 'profile' },
+        ]);
+        res.status(201).json(populated);
+    } catch (err) { next(err); }
 });
 
-// POST /api/appointments — Atomic booking with transaction
-router.post('/', authenticate, authorize('ADMIN', 'DOCTOR', 'PATIENT'), async (req, res, next) => {
+/* ── Update Appointment Status ── */
+router.patch('/:id/status', authenticate, authorize('ADMIN', 'DOCTOR'), async (req, res, next) => {
     try {
-        const appointment = await appointmentService.createAppointment(req.body);
-        res.status(201).json({ appointment });
-    } catch (error) {
-        if (error.message === 'DOCTOR_BUSY') {
-            return res.status(409).json({
-                message: 'This doctor is already booked at the selected time. Please choose a different time slot.',
-            });
-        }
-        next(error);
-    }
+        const { status } = req.body;
+        const appointment = await Appointment.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+        if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+        res.json(appointment);
+    } catch (err) { next(err); }
 });
 
-// DELETE /api/appointments/:id
-router.delete('/:id', authenticate, authorize('ADMIN', 'DOCTOR'), async (req, res, next) => {
+/* ── Delete Appointment ── */
+router.delete('/:id', authenticate, authorize('ADMIN'), async (req, res, next) => {
     try {
-        await appointmentService.deleteAppointment(req.params.id);
-        res.json({ message: 'Appointment deleted successfully' });
-    } catch (error) {
-        next(error);
-    }
+        await Appointment.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Appointment deleted' });
+    } catch (err) { next(err); }
 });
 
-module.exports = router;
+export default router;

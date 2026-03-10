@@ -5,14 +5,14 @@ import api from '../api/axios';
 import { toast } from 'sonner';
 import {
     Heart, LayoutDashboard, Users, Calendar, LogOut,
-    ChevronLeft, ChevronRight, Activity,
+    ChevronRight, Activity, Menu, X, User,
 } from 'lucide-react';
 import { useState } from 'react';
 
-const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', desc: 'Overview & stats' },
-    { to: '/patients', icon: Users, label: 'Patients', desc: 'Patient records' },
-    { to: '/appointments', icon: Calendar, label: 'Appointments', desc: 'Schedule & manage' },
+const ALL_NAV_ITEMS = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', desc: 'Overview & stats', roles: ['ADMIN', 'DOCTOR', 'PATIENT'] },
+    { to: '/patients', icon: Users, label: 'Patients', desc: 'Patient records', roles: ['ADMIN', 'DOCTOR'] },
+    { to: '/appointments', icon: Calendar, label: 'Appointments', desc: 'Schedule & manage', roles: ['ADMIN', 'DOCTOR', 'PATIENT'] },
 ];
 
 export default function AppLayout() {
@@ -20,11 +20,15 @@ export default function AppLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Filter nav items based on current user role
+    const navItems = ALL_NAV_ITEMS.filter(item => !user || item.roles.includes(user.role));
 
     const handleLogout = async () => {
         try { await api.post('/auth/logout'); } catch { }
         clearUser();
-        toast.success('Logged out');
+        toast.success('Logged out successfully');
         navigate('/login');
     };
 
@@ -34,13 +38,32 @@ export default function AppLayout() {
         PATIENT: 'bg-blue-500/15 border-blue-500/25 text-blue-300',
     };
 
+    const roleIcon = {
+        ADMIN: '⚡',
+        DOCTOR: '🩺',
+        PATIENT: '💙',
+    };
+
     const sidebarW = collapsed ? 72 : 256;
 
     return (
         <div className="min-h-screen flex noise">
+            {/* ── Mobile Overlay ── */}
+            <AnimatePresence>
+                {mobileOpen && (
+                    <motion.div
+                        className="sidebar-overlay lg:hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setMobileOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* ── Sidebar ── */}
             <motion.aside
-                className="fixed top-0 left-0 h-full z-30 flex flex-col border-r border-white/[0.04]"
+                className="fixed top-0 left-0 h-full z-30 flex flex-col border-r border-white/[0.06]"
                 style={{ background: 'hsl(222.2 84% 3.5%)' }}
                 animate={{ width: sidebarW }}
                 transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
@@ -69,8 +92,34 @@ export default function AppLayout() {
                     </AnimatePresence>
                 </div>
 
+                {/* Role Badge (visible when expanded) */}
+                <AnimatePresence>
+                    {!collapsed && user && (
+                        <motion.div
+                            className="mx-3 mt-3 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 shrink-0 text-sm">
+                                    {roleIcon[user.role] || <User className="w-4 h-4 text-white/50" />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-semibold text-white/80 truncate">
+                                        {user.profile?.firstName} {user.profile?.lastName}
+                                    </p>
+                                    <span className={`inline-flex text-[9px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${roleBadge[user.role] || ''}`}>
+                                        {user.role}
+                                    </span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Nav */}
-                <nav className="flex-1 py-4 px-2.5 space-y-1 overflow-y-auto">
+                <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto">
                     {navItems.map((item) => (
                         <NavLink key={item.to} to={item.to} end={item.to === '/'}>
                             {({ isActive }) => (
@@ -108,35 +157,11 @@ export default function AppLayout() {
                     ))}
                 </nav>
 
-                {/* User Card */}
-                <div className="p-2.5 border-t border-white/[0.04] space-y-2 shrink-0">
-                    <AnimatePresence>
-                        {!collapsed && user && (
-                            <motion.div
-                                className="px-3 py-3 rounded-xl bg-white/[0.02]"
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 shrink-0">
-                                        <span className="text-xs font-bold text-blue-300">
-                                            {user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}
-                                        </span>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-medium text-white/80 truncate">
-                                            {user.profile?.firstName} {user.profile?.lastName}
-                                        </p>
-                                        <span className={`inline-flex text-[9px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider mt-0.5 ${roleBadge[user.role] || ''}`}>
-                                            {user.role}
-                                        </span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                {/* Divider line */}
+                <div className="mx-3 border-t border-white/[0.04]" />
 
+                {/* Logout at bottom */}
+                <div className="p-2.5 space-y-1 shrink-0">
                     <motion.button
                         onClick={handleLogout}
                         className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/5 transition-all"
@@ -175,17 +200,36 @@ export default function AppLayout() {
             >
                 {/* Top Bar */}
                 <div className="sticky top-0 z-20 h-14 border-b border-white/[0.04] glass flex items-center justify-between px-6">
-                    <div className="flex items-center gap-2 text-white/30 text-sm">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                        </span>
-                        <span className="text-emerald-400 font-medium">Live</span>
-                        <span className="text-white/10">•</span>
-                        <span>Neon DB Connected</span>
+                    <div className="flex items-center gap-3">
+                        {/* Mobile hamburger */}
+                        <button
+                            className="lg:hidden p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all"
+                            onClick={() => setMobileOpen(!mobileOpen)}
+                        >
+                            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                        </button>
+                        <div className="flex items-center gap-2 text-white/30 text-sm">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                            </span>
+                            <span className="text-emerald-400 font-medium text-xs">Live</span>
+                            <span className="text-white/10">•</span>
+                            <span className="text-xs">System Healthy</span>
+                        </div>
                     </div>
-                    <div className="text-white/15 text-xs font-mono hidden md:block">
-                        {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+                    <div className="flex items-center gap-3">
+                        {/* Role badge in topbar */}
+                        {user && (
+                            <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${roleBadge[user.role] || ''}`}>
+                                <span>{roleIcon[user.role]}</span>
+                                <span>{user.role}</span>
+                            </div>
+                        )}
+                        <div className="text-white/15 text-xs font-mono hidden md:block">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </div>
                     </div>
                 </div>
 

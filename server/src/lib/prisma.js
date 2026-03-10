@@ -1,7 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-});
-
-module.exports = prisma;
+// Legacy file - replaced by Mongoose models in src/models/
+// MongoDB connection is handled in src/index.js via mongoose.connect()
+export default {};
