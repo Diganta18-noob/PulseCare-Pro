@@ -98,6 +98,7 @@ export default function LoginPage() {
     {
       role: "Admin",
       email: "admin@pulsecare.com",
+      password: "Admin1234",
       icon: Shield,
       grad: "from-amber-400 to-orange-500",
       glow: "shadow-amber-500/30",
@@ -106,6 +107,7 @@ export default function LoginPage() {
     {
       role: "Doctor",
       email: "doctor@pulsecare.com",
+      password: "Doctor1234",
       icon: Stethoscope,
       grad: "from-emerald-400 to-cyan-500",
       glow: "shadow-emerald-500/30",
@@ -114,12 +116,30 @@ export default function LoginPage() {
     {
       role: "Patient",
       email: "patient@pulsecare.com",
+      password: "Patient1234",
       icon: Heart,
       grad: "from-blue-400 to-indigo-500",
       glow: "shadow-blue-500/30",
       border: "border-blue-500/30",
     },
   ];
+
+  // One-click login directly from MongoDB
+  const handleDemoLogin = async (demo) => {
+    setLoading(true);
+    setEmail(demo.email);
+    setPassword(demo.password);
+    try {
+      const { data } = await api.post("/auth/login", { email: demo.email, password: demo.password });
+      setUser(data.user);
+      toast.success(`Welcome, ${data.user.profile?.firstName || demo.role}! 🎉`);
+      navigate("/");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Demo login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex overflow-hidden relative">
@@ -478,10 +498,7 @@ export default function LoginPage() {
               <motion.button
                 key={d.role}
                 type="button"
-                onClick={() => {
-                  setEmail(d.email);
-                  setPassword("password123");
-                }}
+                onClick={() => handleDemoLogin(d)}
                 className={`relative p-4 rounded-2xl border ${d.border} bg-white/[0.02] cursor-pointer transition-all duration-300 group overflow-hidden`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
